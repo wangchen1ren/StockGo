@@ -1,8 +1,10 @@
 package stock
 
-import "github.com/doneland/yquotes"
+import (
+	"github.com/doneland/yquotes"
+)
 
-func CalcSharpeRatio(prices []yquotes.PriceH) (int, err) {
-
-	return ratio, nil;
+func SharpeRatio(prices []yquotes.PriceH) (float64, error) {
+	return 0, nil;
 }
+
