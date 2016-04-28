@@ -1,5 +1,6 @@
 package stock
 
+/*
 import (
 	"github.com/doneland/yquotes"
 	"sort"
@@ -51,3 +52,4 @@ func SortPriceByDate(prices []yquotes.PriceH, order string) ([]yquotes.PriceH) {
 	}
 	return prices;
 }
+*/
