@@ -2,48 +2,58 @@ package stock
 
 import (
     "github.com/doneland/yquotes"
+    "github.com/zpatrick/go-config"
+    "time"
+    "math"
 )
 
-func NewPrices(yps []yquotes.PriceH) (Prices) {
-    prices := make(Prices, len(yps));
-    for i, yp := range yps {
-        p := Price{}
-        //fmt.Printf("%d : %v\n", i, yp.Date);
-        p.Original = yp;
-        p.init();
-        prices[i] = p;
+type Turtle struct {
+    Prices Prices
+    TR     []float64
+    N20    []float64
+}
+
+func NewTurtle(conf *config.Config, symbol string, from, to time.Time) (Turtle, error) {
+    prices, err := GetPrices(conf, symbol, from, to)
+    if err != nil {
+        return Turtle{}, err
     }
-    return prices;
+    return NewTurtleByPrices(prices), nil
 }
 
-/**
-func (prices Prices) tr() {
-	for i, p := range prices {
-		if i == 0 {
-			p.TR = p.Price.High - p.Price.Low;
-		} else {
-			pd := prices[i - 1];
-			v1 := p.Price.High - p.Price.Low;
-			v2 := p.Price.High - pd.Price.Close;
-			v3 := pd.Price.Close - p.Price.Low;
-			p.TR = math.Max(math.Max(v1, v2), v3);
-		}
-		prices[i] = p;
-	}
+func NewTurtleByPrices(prices Prices) Turtle {
+    var turtle Turtle
+    turtle.Prices = prices
+    turtle.calcTr()
+    turtle.calcN20()
+
+    return turtle
 }
 
-func (prices Prices) n20() {
-	for i, p := range prices {
-		if i == 0 {
-			p.N20 = p.TR;
-		} else {
-			pd := prices[i - 1];
-			p.N20 = (19 * pd.N20 + p.TR) / 20;
-		}
-		prices[i] = p;
-	}
+func (t *Turtle) calcTr() {
+    t.TR = make([]float64, len(t.Prices))
+    for i := 0; i < len(t.Prices); i++ {
+        if i == 0 {
+            t.TR[i] = t.Prices[i].High - t.Prices[i].Low
+        } else {
+            v1 := t.Prices[i].High - t.Prices[i].Low;
+            v2 := t.Prices[i].High - t.Prices[i - 1].Close;
+            v3 := t.Prices[i - 1].Close - t.Prices[i].Low;
+            t.TR[i] = math.Max(math.Max(v1, v2), v3);
+        }
+    }
 }
-*/
+
+func (t *Turtle) calcN20() {
+    t.N20 = make([]float64, len(t.Prices))
+    for i := 0; i < len(t.Prices); i++ {
+        if i == 0 {
+            t.N20[i] = t.TR[i]
+        } else {
+            t.N20[i] = (19 * t.N20[i - 1] + t.TR[i]) / 20;
+        }
+    }
+}
 
 func SharpeRatio(prices []yquotes.PriceH) (float64, error) {
     return 0, nil;

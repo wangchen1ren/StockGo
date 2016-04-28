@@ -9,22 +9,40 @@ import (
 )
 import (
     _ "github.com/go-sql-driver/mysql"
+    "sort"
 )
 
 type Price struct {
     Original yquotes.PriceH;
-    Price    yquotes.PriceH;
+    Date     time.Time
+    Open     float64
+    High     float64
+    Low      float64
+    Close    float64
+    Volume   float64
+    AdjClose float64
+    //Price    yquotes.PriceH;
 }
 
-func (price *Price) init() {
-    price.Price = price.Original;
-    if price.Price.AdjClose != price.Price.Close {
-        rate := price.Price.Close / price.Price.AdjClose;
-        price.Price.Open /= rate;
-        price.Price.High /= rate;
-        price.Price.Low /= rate;
-        price.Price.Close /= rate;
+func NewPrice(p yquotes.PriceH) Price {
+    var price Price
+    price.Original = p
+    price.Date = p.Date
+    if p.AdjClose != p.Close {
+        rate := p.Close / p.AdjClose;
+        price.Open = p.Open / rate;
+        price.High = p.High / rate;
+        price.Low = p.Low / rate;
+        price.Close = p.Close / rate;
+    } else {
+        price.Open = p.Open;
+        price.High = p.High;
+        price.Low = p.Low;
+        price.Close = p.Close;
     }
+    price.Volume = p.Volume
+    price.AdjClose = p.AdjClose
+    return price
 }
 
 type Prices []Price;
@@ -33,7 +51,7 @@ func (prices Prices) Len() int {
     return len(prices)
 }
 func (prices Prices) Less(i, j int) bool {
-    return prices[i].Price.Date.Before(prices[j].Price.Date)
+    return prices[i].Date.Before(prices[j].Date)
 }
 func (prices Prices) Swap(i, j int) {
     prices[i], prices[j] = prices[j], prices[i]
@@ -50,10 +68,9 @@ func GetPrices(conf *config.Config, symbol string, from, to time.Time) (Prices, 
 func MakePrices(originals []yquotes.PriceH) Prices {
     prices := make(Prices, len(originals));
     for i, original := range originals {
-        p := Price{Original:original}
-        p.init();
-        prices[i] = p;
+        prices[i] = NewPrice(original);
     }
+    sort.Sort(prices)
     return prices;
 }
 
