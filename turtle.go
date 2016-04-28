@@ -7,30 +7,29 @@ import (
     "math"
 )
 
-type Turtle struct {
+type TurtleStock struct {
     Prices Prices
     TR     []float64
     N20    []float64
 }
 
-func NewTurtle(conf *config.Config, symbol string, from, to time.Time) (Turtle, error) {
+func NewTurtleStock(conf *config.Config, symbol string, from, to time.Time) (TurtleStock, error) {
     prices, err := GetPrices(conf, symbol, from, to)
     if err != nil {
-        return Turtle{}, err
+        return TurtleStock{}, err
     }
-    return NewTurtleByPrices(prices), nil
+    return NewTurtleStockByPrices(prices), nil
 }
 
-func NewTurtleByPrices(prices Prices) Turtle {
-    var turtle Turtle
+func NewTurtleStockByPrices(prices Prices) TurtleStock {
+    var turtle TurtleStock
     turtle.Prices = prices
     turtle.calcTr()
     turtle.calcN20()
-
     return turtle
 }
 
-func (t *Turtle) calcTr() {
+func (t *TurtleStock) calcTr() {
     t.TR = make([]float64, len(t.Prices))
     for i := 0; i < len(t.Prices); i++ {
         if i == 0 {
@@ -44,7 +43,7 @@ func (t *Turtle) calcTr() {
     }
 }
 
-func (t *Turtle) calcN20() {
+func (t *TurtleStock) calcN20() {
     t.N20 = make([]float64, len(t.Prices))
     for i := 0; i < len(t.Prices); i++ {
         if i == 0 {
