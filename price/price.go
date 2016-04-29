@@ -1,6 +1,7 @@
-package stock
+package price
 
 import (
+    "github.com/wangchen1ren/stock-go/utils"
     "time"
     "github.com/doneland/yquotes"
     "github.com/zpatrick/go-config"
@@ -79,20 +80,19 @@ func MakePrices(originals []yquotes.PriceH) Prices {
 func GetYquotesPrices(
 conf *config.Config, symbol string, from, to time.Time) ([]yquotes.PriceH, error) {
     // normalize from and to in range 2000-01-01 to NOW()
-    if from.Before(time.Unix(946656000, 0)) {
-        // 2000-01-01
-        from = time.Unix(946656000, 0)
+    if from.Before(utils.StartDate()) {
+        from = utils.StartDate()
     }
-    if to.After(time.Now()) {
-        to = time.Now()
+    if to.After(utils.Today()) {
+        to = utils.Today()
     }
     glog.Infof("Get %s prices from %s to %s", symbol,
-        from.Format(time.RFC3339), to.Format(time.RFC3339));
+        utils.DateFormat(from, "Y-m-d H:i"), utils.DateFormat(to, "Y-m-d H:i"));
 
     // 1. Get fetch time from db
     start, end := getRangeFromDb(conf, symbol);
     glog.Infof("Current cache from %s to %s",
-        start.Format(time.RFC3339), end.Format(time.RFC3339));
+        utils.DateFormat(start, "Y-m-d H:i"), utils.DateFormat(end, "Y-m-d H:i"));
 
     // 2. local data not exists, fetch and save
 
@@ -132,7 +132,7 @@ type priceDb struct {
 
 // Get local cache data range
 func getRangeFromDb(conf *config.Config, symbol string) (time.Time, time.Time) {
-    db, err := GetDb(conf)
+    db, err := utils.GetDb(conf)
     if err != nil {
         return time.Unix(0, 0), time.Unix(0, 0);
     }
@@ -145,12 +145,14 @@ func getRangeFromDb(conf *config.Config, symbol string) (time.Time, time.Time) {
 
 // Fetch and save price
 func savePricesToDb(conf *config.Config, symbol string, from, to time.Time) (error) {
+    glog.Infof("Fetching %s prices from %s to %s", symbol,
+        utils.DateFormat(from, "Y-m-d H:i"), utils.DateFormat(to, "Y-m-d H:i"));
     prices, err := yquotes.GetDailyHistory(symbol, from, to);
     if err != nil {
         return err;
     }
 
-    db, err := GetDb(conf)
+    db, err := utils.GetDb(conf)
     if err != nil {
         return err;
     }
@@ -159,10 +161,10 @@ func savePricesToDb(conf *config.Config, symbol string, from, to time.Time) (err
     tx := db.MustBegin()
     for _, price := range prices {
         if exists, _ := isPriceExists(db, symbol, price.Date); exists {
-            glog.Infof("Price[%s @ %s] already saved.", symbol, price.Date.Format(time.RFC3339));
+            glog.Infof("Price[%s @ %s] already saved.", symbol, utils.DateFormat(price.Date, "Y-m-d H:i"));
             continue
         }
-        glog.Infof("Saving price[%s @ %s]", symbol, price.Date.Format(time.RFC3339))
+        glog.Infof("Saving price[%s @ %s]", symbol, utils.DateFormat(price.Date, "Y-m-d H:i"))
         sql := "INSERT INTO price (symbol, date, open, high, low, close, adjclose, volumn) "
         sql += "VALUES (:symbol, :date, :open, :high, :low, :close, :adjclose, :volumn)"
         //glog.Infof("Insert sql: %s", sql)
@@ -197,7 +199,7 @@ func isPriceExists(db *sqlx.DB, symbol string, date time.Time) (bool, error) {
 }
 
 func getPricesFromDb(conf *config.Config, symbol string, from, to time.Time) ([]priceDb, error) {
-    db, err := GetDb(conf)
+    db, err := utils.GetDb(conf)
     if err != nil {
         return nil, err;
     }

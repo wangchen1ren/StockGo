@@ -5,8 +5,12 @@ import (
     "fmt"
     "os"
     "github.com/zpatrick/go-config"
-    "github.com/ethereum/go-ethereum/logger/glog"
+    "github.com/golang/glog"
+    //"github.com/ethereum/go-ethereum/logger/glog"
     "time"
+    "github.com/wangchen1ren/stock-go/utils"
+    "github.com/wangchen1ren/stock-go/strategies"
+    "github.com/wangchen1ren/stock-go/price"
 )
 
 func Test() {
@@ -14,7 +18,8 @@ func Test() {
     //TestGetFetch(conf)
     //TestSavePricesToDb(conf);
     //GetDb(conf)
-    TestGetPrices(conf)
+    //TestGetPrices(conf)
+    TestTurtle(conf)
 
     //symbol := "002721.sz";
     //hist, _ := yquotes.HistoryForYears(symbol, 1, yquotes.Daily);
@@ -24,34 +29,24 @@ func Test() {
     //fmt.Printf("%+v", prices);
 }
 
-func TestGetFetch(conf *config.Config) {
-    //symbol := "002721.sz"
-    symbol := "123"
-    fetch, _ := getRangeFromDb(conf, symbol)
-    fmt.Printf("%+v", fetch);
+func TestTurtle(conf *config.Config) {
+    symbol := "002721.sz"
+    from, _ := utils.DateParse("20160101", "Ymd")
+    to, _ := utils.DateParse("2016-01-10", "Y-m-d")
+    prices, _ := price.GetPrices(conf, symbol, from, to)
+    turtle := strategies.Turtle{}
+    turtle.Eval(symbol, prices)
 }
 
 func TestGetPrices(conf *config.Config) {
     symbol := "002721.sz"
     from := time.Unix(1451577600, 0).AddDate(0, 0, 1)
     to := time.Now().AddDate(0, 0, -1)
-    prices, err := GetPrices(conf, symbol, from, to);
+    prices, err := price.GetPrices(conf, symbol, from, to);
     if err != nil {
         glog.Error(err.Error());
     }
     fmt.Println(prices)
-}
-
-func TestSavePricesToDb(conf *config.Config) {
-    symbol := "002721.sz"
-    //hist, _ := yquotes.HistoryForYears(symbol, 1, yquotes.Daily);
-    from := time.Unix(1451577600, 0)
-    to := time.Now()
-    err := savePricesToDb(conf, symbol, from, to)
-    if err != nil {
-        glog.Error(err);
-    }
-    glog.Infof("success")
 }
 
 func TestPrice(symbol string) {

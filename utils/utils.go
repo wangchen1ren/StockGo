@@ -1,4 +1,4 @@
-package stock
+package utils
 
 import (
     "fmt"
@@ -6,6 +6,7 @@ import (
     "github.com/doneland/yquotes"
     "github.com/zpatrick/go-config"
     "github.com/jmoiron/sqlx"
+    "strconv"
 )
 
 func DumpPrices(prices []yquotes.PriceH) {
@@ -23,4 +24,10 @@ func GetDb(conf *config.Config) (*sqlx.DB, error) {
     addr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", user, pass, host, port, dbname);
     //glog.Info(addr);
     return sqlx.Open("mysql", addr)
+}
+
+func Round(f float64, digits int) float64 {
+    format := "%." + strconv.Itoa(digits) + "f"
+    f, _ = strconv.ParseFloat(fmt.Sprintf(format, f), 64)
+    return f
 }
