@@ -8,13 +8,15 @@ import (
     "github.com/golang/glog"
     //"github.com/ethereum/go-ethereum/logger/glog"
     "time"
+    //"github.com/wangchen1ren/stock-go/conf"
     "github.com/wangchen1ren/stock-go/utils"
     "github.com/wangchen1ren/stock-go/strategies"
     "github.com/wangchen1ren/stock-go/price"
+    "github.com/wangchen1ren/stock-go/conf"
 )
 
 func Test() {
-    conf, _ := LoadConfig(CONFIG_FILE)
+    conf, _ := conf.LoadConfig(conf.CONFIG_FILE)
     //TestGetFetch(conf)
     //TestSavePricesToDb(conf);
     //GetDb(conf)

@@ -1,4 +1,4 @@
-package stock
+package conf
 
 import (
     "github.com/zpatrick/go-config"
@@ -6,7 +6,7 @@ import (
 )
 
 const (
-    CONFIG_FILE = "config.ini"
+    CONFIG_FILE = "../config.ini"
 )
 
 func LoadConfig(file string) (*config.Config, error) {
